@@ -1,90 +1,159 @@
-# Lab3_PracticaSupervisada
 # gestorOpiniones API
 
-Bienvenido a gestorOpiniones, una API RESTful desarrollada por mí, Ricardo Figueroa, para la gestión de opiniones. Este proyecto se realizó en Node.js, Express y MongoDB, y tiene como objetivo simular un sistema de publicaciones y comentarios similar a lo que encontramos en redes sociales, pero enfocado en la expresión y administración de opiniones.  
+Bienvenido a **gestorOpiniones**, una API RESTful que desarrollé en Node.js, Express y MongoDB para gestionar un sistema de opiniones similar a lo que se ve en redes sociales. Esta aplicación permite a los usuarios registrarse, iniciar sesión, administrar sus perfiles, crear publicaciones, comentar y gestionar categorías (opción exclusiva para el administrador). Al iniciar el sistema se crea automáticamente un usuario administrador y una categoría predeterminada para garantizar que siempre exista una base mínima operativa.
 
 ---
 
 ## Presentación Personal
 
-Hola, soy Ricardo Figueroa, estudiante con número de carnet **2023370** y código técnico **IN6BV**. Este proyecto es fruto de mi esfuerzo y dedicación en el curso, bajo la dirección de mi profesor, Braulio Echeverria. En gestorOpiniones he buscado aplicar todo lo aprendido sobre seguridad, validaciones y buenas prácticas de desarrollo, creando una API modular, segura y fácil de mantener.
+Soy **Ricardo Figueroa**  
+**Carnet:** 2023370  
+**Código Técnico:** IN6BV  
+**Profesor:** Braulio Echeverria
+
+Este proyecto es el resultado de mi esfuerzo personal y la aplicación de los conocimientos adquiridos. Mi intención fue desarrollar una API modular, segura y fácil de mantener, poniendo especial énfasis en las validaciones y el manejo correcto de errores.
 
 ---
 
 ## Descripción de la API
 
-gestorOpiniones permite:
+**gestorOpiniones** ofrece las siguientes funcionalidades:
 
 - **Autenticación y Gestión de Usuarios:**  
-  - Registro de usuarios con validación de datos y opción para subir una imagen de perfil.  
-  - Inicio de sesión mediante email o username, generando un token JWT para acceso seguro a las funcionalidades protegidas.  
-  - Gestión del perfil, donde el usuario puede actualizar sus datos, cambiar su contraseña (con verificación de la contraseña actual) y modificar su foto de perfil.
-  
+  - Registro seguro de nuevos usuarios (con opción de subir foto de perfil).  
+  - Inicio de sesión mediante email o username, generando un token para acceder a funciones protegidas.  
+  - Administración del perfil: actualización de datos y cambio de contraseña (con verificación previa de la contraseña actual).
+
 - **Gestión de Publicaciones:**  
-  - Los usuarios pueden crear publicaciones que incluyan un título, contenido y una categoría asignada.  
-  - Solo el autor de una publicación puede editarla o eliminarla, garantizando la integridad y propiedad del contenido.
+  - Creación de publicaciones que incluyen título, contenido y categoría.  
+  - Solo el creador de la publicación puede editarla o eliminarla.
 
 - **Gestión de Comentarios:**  
-  - Los usuarios pueden comentar en las publicaciones para expresar sus opiniones o agregar información adicional.  
-  - Solo el autor de un comentario puede editarlo o eliminarlo, protegiendo la autoría y responsabilidad de cada mensaje.
+  - Los usuarios pueden comentar en las publicaciones para expresar sus opiniones.  
+  - Solo el autor de un comentario puede modificarlo o eliminarlo.
 
 - **Gestión de Categorías:**  
-  - Este módulo está reservado exclusivamente para el administrador del sistema.  
+  - Exclusiva para el administrador del sistema.  
   - Permite crear, editar y eliminar categorías.  
-  - Al iniciar el sistema se crea automáticamente una categoría por defecto, la cual se usa para reasignar publicaciones en caso de eliminación de otra categoría.
+  - Se crea automáticamente una categoría predeterminada para reasignar publicaciones si se elimina otra.
 
-Además, al arrancar la aplicación, se ejecuta un proceso que se encarga de sembrar la base de datos con un usuario administrador y una categoría predeterminada, asegurando que el sistema siempre tenga una estructura mínima operativa.
+- **Semilla de Datos:**  
+  - Al arrancar la aplicación se verifica y, en caso de no existir, se crea un usuario administrador y una categoría predeterminada.
 
 ---
 
-## Diagrama de Flujo del Sistema
+## Flujo General del Sistema (Resumen en Viñetas)
 
-A continuación, presento un diagrama de flujo que resume el proceso general de la API. Este diagrama refleja mi forma de pensar en la arquitectura del sistema, mostrando la secuencia desde la inicialización hasta el manejo de cada módulo:
+- **Inicio del Sistema:**
+  - Revisar si ya existe un usuario administrador y una categoría predeterminada.
+  - Si no existen, se crean ambos para garantizar el correcto funcionamiento del sistema.
+  - Una vez configurado, el sistema queda a la espera de solicitudes.
 
-```mermaid
-flowchart TD
-    A[Inicio del Sistema] --> B[Verificación de Datos Semilla]
-    B --> C{¿Existe Admin y Categoría Default?}
-    C -- No --> D[Crear Usuario Admin]
-    C -- No --> E[Crear Categoría Default]
-    C -- Sí --> F[Inicialización Completa]
-    F --> G[Esperando Peticiones]
-    
-    subgraph Autenticación y Usuarios
-      G --> H[Registro de Usuario]
-      H --> I{Validar Datos de Registro}
-      I -- Correcto --> J[Guardar Usuario en BD]
-      I -- Incorrecto --> K[Retornar Error]
-      G --> L[Inicio de Sesión]
-      L --> M{Verificar Credenciales}
-      M -- Correcto --> N[Generar JWT y Retornar Token]
-      M -- Incorrecto --> O[Retornar Error de Autenticación]
-      G --> P[Consultar/Actualizar Perfil]
-    end
+- **Para Usuarios y Autenticación:**
+  - **Registro:**  
+    - El usuario ingresa sus datos.
+    - Se verifican los datos proporcionados.
+    - Si todo es correcto, se guarda el usuario en la base de datos; si hay errores, se muestra un mensaje de validación.
+  - **Inicio de Sesión:**  
+    - El usuario envía sus credenciales.
+    - Se revisa que las credenciales sean correctas.
+    - Si son válidas, se entrega un token de acceso; si no, se informa del error.
+  - **Consulta y Actualización del Perfil:**  
+    - El usuario puede consultar y modificar sus datos personales, incluyendo su foto de perfil.
 
-    subgraph Publicaciones y Comentarios
-      G --> Q[Crear Publicación]
-      Q --> R{Usuario Autenticado?}
-      R -- Sí --> S[Guardar Publicación con Datos y Categoría]
-      R -- No --> T[Error: Autenticación Requerida]
-      G --> U[Editar/Eliminar Publicación]
-      U --> V{Verificar Propiedad}
-      V -- Propietario --> W[Procesar Edición/Eliminación]
-      V -- No --> X[Error: Permisos Insuficientes]
-      G --> Y[Crear Comentario]
-      Y --> Z{Verificar Autenticación}
-      Z -- Sí --> AA[Guardar Comentario en Publicación]
-      Z -- No --> AB[Error: Autenticación Requerida]
-      G --> AC[Editar/Eliminar Comentario]
-      AC --> AD{Verificar Propiedad del Comentario}
-      AD -- Propietario --> AE[Actualizar/Eliminar Comentario]
-      AD -- No --> AF[Error: Permisos Insuficientes]
-    end
+- **Para Publicaciones y Comentarios:**
+  - **Publicaciones:**  
+    - Crear publicación: se verifica si el usuario está autenticado y, de ser así, se guarda la publicación.
+    - Editar o eliminar publicación: solo el autor de la publicación puede realizar estas acciones; de lo contrario, se muestra un error.
+  - **Comentarios:**  
+    - Crear comentario: el usuario debe estar autenticado para poder comentar.
+    - Editar o eliminar comentario: únicamente el autor del comentario puede modificarlo o eliminarlo.
 
-    subgraph Gestión de Categorías (Solo Admin)
-      G --> AG[Gestionar Categorías]
-      AG --> AH{Validar Rol ADMIN_ROLE}
-      AH -- Sí --> AI[Crear/Editar/Eliminar Categoría]
-      AI --> AJ[Reasignar Publicaciones si se Elimina Categoría]
-      AH -- No --> AK[Error: No Autorizado]
-    end
+- **Para la Gestión de Categorías (Solo Admin):**
+  - El administrador puede gestionar las categorías.
+  - Se verifica que el usuario tenga el rol de administrador antes de permitir crear, editar o eliminar una categoría.
+  - Al eliminar una categoría, se reasignan las publicaciones a la categoría predeterminada.
+
+---
+
+## Endpoints de la API
+
+### **Auth**
+- **POST /gestorOpiniones/v1/auth/register**  
+  Registra un nuevo usuario.  
+  *Formato:* form-data (opción para subir imagen de perfil).
+
+- **POST /gestorOpiniones/v1/auth/login**  
+  Inicia sesión con email o username y contraseña.  
+  *Formato:* raw (JSON).
+
+### **Users**
+- **GET /gestorOpiniones/v1/user/findUser/{uid}**  
+  Obtiene la información de un usuario específico. *(Requiere autenticación)*
+
+- **GET /gestorOpiniones/v1/user**  
+  Lista todos los usuarios (con paginación). *(Requiere autenticación)*
+
+- **DELETE /gestorOpiniones/v1/user/deleteUser/{uid}**  
+  Desactiva un usuario (cambiando su estado). *(Requiere autenticación)*
+
+- **PATCH /gestorOpiniones/v1/user/updatePassword/{uid}**  
+  Cambia la contraseña del usuario. Se envían `oldPassword` y `newPassword` en JSON. *(Requiere autenticación)*
+
+- **PUT /gestorOpiniones/v1/user/updateUser/{uid}**  
+  Actualiza datos personales del usuario.  
+  *Formato:* form-data.
+
+- **PATCH /gestorOpiniones/v1/user/updateProfilePicture/{uid}**  
+  Actualiza la foto de perfil.  
+  *Formato:* form-data (archivo).
+
+### **Categories**
+- **GET /gestorOpiniones/v1/category**  
+  Lista todas las categorías.
+
+- **POST /gestorOpiniones/v1/category**  
+  Crea una nueva categoría. *(Requiere autenticación y rol ADMIN_ROLE)*
+
+- **PUT /gestorOpiniones/v1/category/{id}**  
+  Actualiza una categoría existente. *(Requiere autenticación y rol ADMIN_ROLE)*
+
+- **DELETE /gestorOpiniones/v1/category/{id}**  
+  Elimina una categoría y reasigna las publicaciones a la categoría predeterminada. *(Requiere autenticación y rol ADMIN_ROLE)*
+
+### **Publications**
+- **GET /gestorOpiniones/v1/publication**  
+  Lista todas las publicaciones.
+
+- **POST /gestorOpiniones/v1/publication**  
+  Crea una nueva publicación.  
+  *Formato:* raw (JSON con título, texto y categoría). *(Requiere autenticación)*
+
+- **PUT /gestorOpiniones/v1/publication/{id}**  
+  Actualiza una publicación. Solo el autor puede editarla. *(Requiere autenticación)*
+
+- **DELETE /gestorOpiniones/v1/publication/{id}**  
+  Elimina una publicación. Solo el autor puede eliminarla. *(Requiere autenticación)*
+
+### **Comments**
+- **GET /gestorOpiniones/v1/comment/{publicationId}**  
+  Obtiene los comentarios de una publicación.
+
+- **POST /gestorOpiniones/v1/comment**  
+  Crea un comentario en una publicación.  
+  *Formato:* raw (JSON con texto y publicación). *(Requiere autenticación)*
+
+- **PUT /gestorOpiniones/v1/comment/{id}**  
+  Actualiza un comentario. Solo el autor puede modificarlo. *(Requiere autenticación)*
+
+- **DELETE /gestorOpiniones/v1/comment/{id}**  
+  Elimina un comentario. Solo el autor puede eliminarlo. *(Requiere autenticación)*
+
+---
+
+## Instalación y Ejecución
+
+1. **Clonar el Repositorio:**
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
+   cd gestorOpiniones
